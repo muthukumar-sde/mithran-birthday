@@ -1,0 +1,61 @@
+@keyframes colorHueShift {
+  0% {
+    filter: blur(80px) hue-rotate(0deg) scale(1);
+  }
+  33% {
+    filter: blur(90px) hue-rotate(120deg) scale(1.15);
+  }
+  66% {
+    filter: blur(75px) hue-rotate(240deg) scale(0.9);
+  }
+  100% {
+    filter: blur(80px) hue-rotate(360deg) scale(1);
+  }
+}
+
+.orbsWrapper {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  animation: colorHueShift 16s linear infinite;
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+.orbGold {
+  top: 10%;
+  left: 15%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.65) 0%, rgba(254, 240, 138, 0) 70%);
+}
+
+.orbRose {
+  bottom: 20%;
+  right: 15%;
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.6) 0%, rgba(236, 72, 153, 0) 70%);
+}
+
+.orbViolet {
+  top: 45%;
+  right: 25%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.6) 0%, rgba(168, 85, 247, 0) 70%);
+}
+
+.orbCyan {
+  bottom: 10%;
+  left: 20%;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.55) 0%, rgba(14, 165, 233, 0) 70%);
+}

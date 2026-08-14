@@ -1,0 +1,160 @@
+@import url('https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Playfair+Display:ital,wght@0,600;0,800;1,600;1,800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-cinzel: 'Cinzel Decorative', 'Cinzel', serif;
+  --font-script: 'Great Vibes', 'Alex Brush', cursive;
+  --font-playfair: 'Playfair Display', Georgia, serif;
+
+  --bg-dark: #0b132b; /* Standard deep royal blue background */
+  --bg-card: rgba(15, 23, 42, 0.75);
+  --bg-glass: rgba(255, 255, 255, 0.05);
+
+  --gold-primary: #f59e0b;
+  --gold-light: #fef08a;
+  --gold-glow: rgba(245, 158, 11, 0.4);
+  --gold-gradient: linear-gradient(135deg, #ffffff 0%, #fff2a3 25%, #f59e0b 60%, #d97706 100%);
+  --rose-accent: #f43f5e;
+  --purple-glow: #8b5cf6;
+
+  --text-main: #f8fafc;
+  --text-muted: #cbd5e1;
+  --text-gold: #fde047;
+
+  --border-glass: rgba(255, 255, 255, 0.12);
+  --border-gold-glass: rgba(59, 130, 246, 0.35);
+  --radius-lg: 28px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+/* Restrict Image Downloads, Drag & Context Menu */
+img {
+  -webkit-user-drag: none !important;
+  -khtml-user-drag: none !important;
+  -moz-user-drag: none !important;
+  -o-user-drag: none !important;
+  user-drag: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+
+html, body {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--bg-dark); /* Standard Royal Blue */
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0b132b;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.5);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.8);
+}
+
+/* Stylish Cursive Class */
+.font-script {
+  font-family: var(--font-script);
+}
+
+.font-cinzel {
+  font-family: var(--font-cinzel);
+}
+
+.font-playfair {
+  font-family: var(--font-playfair);
+}
+
+/* Glassmorphism card helper */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--border-gold-glass);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 0 25px rgba(59, 130, 246, 0.08);
+  border-radius: var(--radius-lg);
+}
+
+/* Animated Multi-Color Text Effect */
+@keyframes gradientTextMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.text-animated-color {
+  background: linear-gradient(135deg, #ffffff 0%, #fde047 20%, #f59e0b 40%, #ec4899 60%, #8b5cf6 80%, #38bdf8 100%);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientTextMove 5s ease infinite;
+  filter: drop-shadow(0 0 25px rgba(245, 158, 11, 0.4));
+}
+
+.text-gold-gradient {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.4));
+}
+
+/* Selection */
+::selection {
+  background: rgba(59, 130, 246, 0.4);
+  color: #fff;
+}
+
+/* Utility Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), 0 0 50px rgba(59, 130, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 55px rgba(59, 130, 246, 0.7), 0 0 90px rgba(59, 130, 246, 0.4);
+  }
+}
+
+@keyframes floatAnim {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(3deg);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3.5s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: floatAnim 5.5s infinite ease-in-out;
+}

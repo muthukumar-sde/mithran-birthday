@@ -1,0 +1,74 @@
+.progressContainer {
+  position: fixed;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    display: flex;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  transition: color 0.3s ease;
+
+  .label {
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    white-space: nowrap;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  &:hover {
+    color: var(--gold-light);
+
+    .label {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .dot {
+      background: var(--gold-primary);
+      transform: scale(1.4);
+    }
+  }
+
+  &.active {
+    color: var(--gold-light);
+
+    .label {
+      opacity: 1;
+      transform: translateX(0);
+      font-weight: 600;
+    }
+
+    .dot {
+      background: var(--gold-primary);
+      transform: scale(1.6);
+      box-shadow: 0 0 10px var(--gold-primary);
+    }
+  }
+}
