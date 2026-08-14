@@ -300,10 +300,6 @@ User Agent: ${log.userAgent}`;
             <Download size={16} />
             <span>Export JSON</span>
           </button>
-          <button onClick={() => setShowConfirmModal(true)} className={styles.clearBtn} disabled={logs.length === 0}>
-            <Trash2 size={16} />
-            <span>Clear Logs</span>
-          </button>
         </div>
       </div>
 
