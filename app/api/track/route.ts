@@ -45,7 +45,7 @@ function readLogVisits(): VisitLogItem[] {
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         memoryVisits = parsed;
         return parsed;
       }
@@ -185,8 +185,8 @@ export async function POST(req: NextRequest) {
       path: body.path || '/',
     };
 
-    const currentVisits = readLogVisits();
-    const updatedVisits = [logData, ...currentVisits];
+    const freshVisits = readLogVisits();
+    const updatedVisits = [logData, ...freshVisits];
     saveLogVisits(updatedVisits);
 
     return NextResponse.json({

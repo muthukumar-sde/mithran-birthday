@@ -17,6 +17,13 @@ import {
   MapPin,
   Laptop,
   Compass,
+  Download,
+  ExternalLink,
+  Copy,
+  Check,
+  X,
+  Cpu,
+  Info,
 } from 'lucide-react';
 import styles from './Track.module.scss';
 
@@ -29,6 +36,8 @@ export interface VisitLog {
   country: string;
   countryCode: string;
   org: string;
+  latitude?: number | null;
+  longitude?: number | null;
   userAgent: string;
   device: string;
   browser: string;
@@ -73,7 +82,7 @@ function timeAgo(isoStr: string) {
   try {
     const now = new Date().getTime();
     const past = new Date(isoStr).getTime();
-    const diffSec = Math.floor((now - past) / 1000);
+    const diffSec = Math.max(0, Math.floor((now - past) / 1000));
     if (diffSec < 60) return `${diffSec}s ago`;
     const diffMin = Math.floor(diffSec / 60);
     if (diffMin < 60) return `${diffMin}m ago`;
@@ -90,8 +99,11 @@ export default function TrackClient() {
   const [logs, setLogs] = useState<VisitLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<VisitLog | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -112,12 +124,22 @@ export default function TrackClient() {
     fetchLogs();
   }, []);
 
+  // Live Auto-Refresh (Poll every 10 seconds if enabled)
+  useEffect(() => {
+    if (!autoRefresh) return;
+    const interval = setInterval(() => {
+      fetchLogs();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
+
   const handleClearLogs = async () => {
     setIsClearing(true);
     try {
       const res = await fetch('/api/track', { method: 'DELETE' });
       if (res.ok) {
         setLogs([]);
+        setSelectedLog(null);
       }
     } catch (err) {
       console.error('Failed to clear logs:', err);
@@ -125,6 +147,41 @@ export default function TrackClient() {
       setIsClearing(false);
       setShowConfirmModal(false);
     }
+  };
+
+  const exportLogsJSON = () => {
+    if (logs.length === 0) return;
+    const jsonStr = JSON.stringify(logs, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mithran_visitor_logs_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const copyLogDetails = (log: VisitLog) => {
+    const formatted = `=== VISITOR LOG DETAILS ===
+IP Address: ${log.ip}
+Timestamp: ${log.timestamp} (${formatDate(log.timestamp)})
+Location: ${log.city}, ${log.region}, ${log.country} (${log.countryCode})
+ISP / Org: ${log.org}
+Coordinates: ${log.latitude && log.longitude ? `${log.latitude}, ${log.longitude}` : 'N/A'}
+Device: ${log.device}
+OS: ${log.osName}
+Browser: ${log.browser}
+Screen: ${log.screen}
+Language: ${log.language}
+Path Visited: ${log.path}
+Referrer: ${log.referrer}
+User Agent: ${log.userAgent}`;
+
+    navigator.clipboard.writeText(formatted);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   // Filter logs by search term
@@ -136,11 +193,13 @@ export default function TrackClient() {
         log.ip.toLowerCase().includes(q) ||
         log.city.toLowerCase().includes(q) ||
         log.country.toLowerCase().includes(q) ||
+        log.region.toLowerCase().includes(q) ||
         log.osName.toLowerCase().includes(q) ||
         log.browser.toLowerCase().includes(q) ||
         log.userAgent.toLowerCase().includes(q) ||
         log.device.toLowerCase().includes(q) ||
-        log.path.toLowerCase().includes(q)
+        log.path.toLowerCase().includes(q) ||
+        log.org.toLowerCase().includes(q)
     );
   }, [logs, search]);
 
@@ -182,18 +241,30 @@ export default function TrackClient() {
           </Link>
           <div className={styles.titleWrap}>
             <h1 className={styles.title}>
-              Visitor Analytics <span className={styles.liveBadge}><ShieldCheck size={14} /> Live Logs</span>
+              Visitor Analytics <span className={styles.liveBadge}><ShieldCheck size={14} /> Live Visitor Log</span>
             </h1>
             <p className={styles.subtitle}>
-              Real-time user agent, geolocation, and access log tracker for mithran-birthday.
+              Real-time user agent, geolocation, IP, and visitor details stored in visitor log file.
             </p>
           </div>
         </div>
 
         <div className={styles.headerActions}>
+          <button
+            onClick={() => setAutoRefresh((prev) => !prev)}
+            className={`${styles.autoRefreshToggle} ${autoRefresh ? styles.autoRefreshActive : ''}`}
+            title="Toggle Live Auto Refresh every 10s"
+          >
+            <RefreshCw size={14} className={autoRefresh ? styles.spinning : ''} />
+            <span>{autoRefresh ? 'Live Auto: ON' : 'Live Auto: OFF'}</span>
+          </button>
           <button onClick={fetchLogs} className={styles.refreshBtn} disabled={loading}>
             <RefreshCw size={16} className={loading ? styles.spinning : ''} />
             <span>Refresh</span>
+          </button>
+          <button onClick={exportLogsJSON} className={styles.exportBtn} disabled={logs.length === 0}>
+            <Download size={16} />
+            <span>Export JSON</span>
           </button>
           <button onClick={() => setShowConfirmModal(true)} className={styles.clearBtn} disabled={logs.length === 0}>
             <Trash2 size={16} />
@@ -209,7 +280,7 @@ export default function TrackClient() {
             <Users size={22} className={styles.statIconGold} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Total Page Views</span>
+            <span className={styles.statLabel}>Total Page Visits</span>
             <span className={styles.statValue}>{stats.totalVisits}</span>
           </div>
         </div>
@@ -251,7 +322,7 @@ export default function TrackClient() {
           <Search size={18} className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Search by IP, City, Country, OS, Browser, or User Agent..."
+            placeholder="Search by IP, City, Country, OS, Browser, ISP, or Path..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={styles.searchInput}
@@ -263,7 +334,7 @@ export default function TrackClient() {
           )}
         </div>
         <div className={styles.resultCount}>
-          Showing <span>{filteredLogs.length}</span> of {logs.length} entries
+          Showing <span>{filteredLogs.length}</span> of {logs.length} entries • <em>Click any entry to view full detail</em>
         </div>
       </div>
 
@@ -271,7 +342,7 @@ export default function TrackClient() {
       {loading && logs.length === 0 ? (
         <div className={styles.loadingState}>
           <RefreshCw size={32} className={styles.spinning} />
-          <p>Loading visitor logs...</p>
+          <p>Loading visitor logs from log file...</p>
         </div>
       ) : filteredLogs.length === 0 ? (
         <div className={styles.emptyState}>
@@ -292,7 +363,8 @@ export default function TrackClient() {
                 <th>Browser</th>
                 <th>IP Address</th>
                 <th>Screen</th>
-                <th>Path & Referrer</th>
+                <th>Path</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -301,7 +373,12 @@ export default function TrackClient() {
                 const isMobile = log.device === 'Mobile' || log.device === 'Tablet';
 
                 return (
-                  <tr key={log.id}>
+                  <tr
+                    key={log.id}
+                    onClick={() => setSelectedLog(log)}
+                    className={styles.clickableRow}
+                    title="Click to view complete visitor details"
+                  >
                     <td className={styles.indexCol}>{filteredLogs.length - index}</td>
                     <td className={styles.timeCol}>
                       <div className={styles.timeWrap}>
@@ -346,7 +423,18 @@ export default function TrackClient() {
                     <td className={styles.screenCol}>{log.screen}</td>
                     <td className={styles.pathCol}>
                       <span className={styles.pathTag}>{log.path}</span>
-                      <span className={styles.referrerTag}>{log.referrer}</span>
+                    </td>
+                    <td className={styles.actionCol}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedLog(log);
+                        }}
+                        className={styles.viewDetailBtn}
+                      >
+                        <Info size={14} />
+                        <span>Details</span>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -361,7 +449,11 @@ export default function TrackClient() {
               const isMobile = log.device === 'Mobile' || log.device === 'Tablet';
 
               return (
-                <div key={log.id} className={styles.logCard}>
+                <div
+                  key={log.id}
+                  className={styles.logCard}
+                  onClick={() => setSelectedLog(log)}
+                >
                   <div className={styles.logCardHeader}>
                     <div className={styles.logCardNum}>#{filteredLogs.length - index}</div>
                     <div className={styles.logCardTime}>
@@ -409,7 +501,9 @@ export default function TrackClient() {
 
                   <div className={styles.logCardFooter}>
                     <span>Exact Time: {formatDate(log.timestamp)}</span>
-                    <div className={styles.uaAccordion}>UA: {log.userAgent}</div>
+                    <button className={styles.cardDetailLink}>
+                      <Info size={12} /> View Full Detail
+                    </button>
                   </div>
                 </div>
               );
@@ -417,6 +511,163 @@ export default function TrackClient() {
           </div>
         </div>
       )}
+
+      {/* VISITOR DETAIL INSPECTOR MODAL */}
+      <AnimatePresence>
+        {selectedLog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={styles.modalOverlay}
+            onClick={() => setSelectedLog(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0, y: 20 }}
+              className={styles.detailModalCard}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className={styles.detailHeader}>
+                <div className={styles.detailTitleWrap}>
+                  <span className={styles.detailFlagEmoji}>{getCountryFlag(selectedLog.countryCode)}</span>
+                  <div>
+                    <h2 className={styles.detailTitle}>
+                      {selectedLog.city !== 'Unknown City' ? selectedLog.city : 'Visitor Details'}
+                      {selectedLog.region && selectedLog.region !== 'Unknown Region' ? `, ${selectedLog.region}` : ''}
+                    </h2>
+                    <p className={styles.detailSub}>
+                      {selectedLog.country} ({selectedLog.countryCode}) • IP: <code>{selectedLog.ip}</code>
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedLog(null)} className={styles.closeBtn}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Detail Toolbar Actions */}
+              <div className={styles.detailToolbar}>
+                <button onClick={() => copyLogDetails(selectedLog)} className={styles.detailActionBtn}>
+                  {copied ? <Check size={14} className={styles.greenIcon} /> : <Copy size={14} />}
+                  <span>{copied ? 'Copied to Clipboard!' : 'Copy Details'}</span>
+                </button>
+
+                {selectedLog.latitude && selectedLog.longitude ? (
+                  <a
+                    href={`https://www.google.com/maps?q=${selectedLog.latitude},${selectedLog.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.mapLinkBtn}
+                  >
+                    <MapPin size={14} />
+                    <span>View Map Location</span>
+                    <ExternalLink size={12} />
+                  </a>
+                ) : null}
+              </div>
+
+              {/* Grid Sections */}
+              <div className={styles.detailGrid}>
+                {/* 1. Location & Network */}
+                <div className={styles.detailSection}>
+                  <h4 className={styles.sectionHeading}>
+                    <Globe size={16} /> Location & Network
+                  </h4>
+                  <div className={styles.fieldList}>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>IP Address</span>
+                      <code className={styles.fieldValueCode}>{selectedLog.ip}</code>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>City / Region</span>
+                      <span className={styles.fieldValue}>
+                        {selectedLog.city}, {selectedLog.region}
+                      </span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Country</span>
+                      <span className={styles.fieldValue}>
+                        {selectedLog.country} ({selectedLog.countryCode})
+                      </span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>ISP / Provider</span>
+                      <span className={styles.fieldValue}>{selectedLog.org || 'Unknown'}</span>
+                    </div>
+                    {selectedLog.latitude && selectedLog.longitude ? (
+                      <div className={styles.fieldRow}>
+                        <span className={styles.fieldLabel}>Geo Coordinates</span>
+                        <span className={styles.fieldValue}>
+                          {selectedLog.latitude}, {selectedLog.longitude}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* 2. Device & System */}
+                <div className={styles.detailSection}>
+                  <h4 className={styles.sectionHeading}>
+                    <Cpu size={16} /> Device & Environment
+                  </h4>
+                  <div className={styles.fieldList}>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Device Type</span>
+                      <span className={styles.fieldValue}>{selectedLog.device}</span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Operating System</span>
+                      <span className={styles.fieldValue}>{selectedLog.osName}</span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Browser</span>
+                      <span className={styles.fieldValue}>{selectedLog.browser}</span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Screen Resolution</span>
+                      <span className={styles.fieldValue}>{selectedLog.screen}</span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Language</span>
+                      <span className={styles.fieldValue}>{selectedLog.language}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Session & Page Access */}
+                <div className={styles.detailSectionFull}>
+                  <h4 className={styles.sectionHeading}>
+                    <Clock size={16} /> Access & Session Info
+                  </h4>
+                  <div className={styles.fieldList}>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Date & Time</span>
+                      <span className={styles.fieldValue}>
+                        {formatDate(selectedLog.timestamp)} ({timeAgo(selectedLog.timestamp)})
+                      </span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Visited Path</span>
+                      <span className={styles.fieldValueHighlight}>{selectedLog.path}</span>
+                    </div>
+                    <div className={styles.fieldRow}>
+                      <span className={styles.fieldLabel}>Referrer</span>
+                      <span className={styles.fieldValue}>{selectedLog.referrer}</span>
+                    </div>
+                    <div className={styles.fieldRowStacked}>
+                      <span className={styles.fieldLabel}>User-Agent String</span>
+                      <div className={styles.uaBox}>{selectedLog.userAgent}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Confirmation Modal for Clearing Logs */}
       <AnimatePresence>
@@ -439,7 +690,7 @@ export default function TrackClient() {
                 <Trash2 size={28} />
               </div>
               <h3>Clear All Visit Logs?</h3>
-              <p>Are you sure you want to permanently clear all tracked user logs? This action cannot be undone.</p>
+              <p>Are you sure you want to permanently clear all tracked user logs from the log file? This action cannot be undone.</p>
               <div className={styles.modalActions}>
                 <button onClick={() => setShowConfirmModal(false)} className={styles.cancelBtn}>
                   Cancel
