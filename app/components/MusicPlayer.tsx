@@ -16,24 +16,9 @@ export default function MusicPlayer() {
     audio.preload = 'auto';
     audioRef.current = audio;
 
-    // Attempt autoplay on load
-    const tryAutoplay = async () => {
-      try {
-        await audio.play();
-        setIsPlaying(true);
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      } catch {
-        // Autoplay blocked by browser policy until user interaction
-        setIsPlaying(false);
-        setShowToast(true);
-      }
-    };
+    let delayTimer: NodeJS.Timeout;
 
-    tryAutoplay();
-
-    // Start playing sound on first user gesture anywhere on the page
-    const handleGlobalInteraction = () => {
+    const playAudio = () => {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current
           .play()
@@ -42,8 +27,20 @@ export default function MusicPlayer() {
             setShowToast(true);
             setTimeout(() => setShowToast(false), 3000);
           })
-          .catch(() => {});
+          .catch(() => {
+            setIsPlaying(false);
+          });
       }
+    };
+
+    // Delay audio playback by 3 seconds after site load
+    delayTimer = setTimeout(() => {
+      playAudio();
+    }, 3000);
+
+    // On user interaction anywhere on the page, play audio (respecting 3s delay if page just opened)
+    const handleGlobalInteraction = () => {
+      playAudio();
     };
 
     window.addEventListener('click', handleGlobalInteraction, { once: true });
@@ -51,6 +48,7 @@ export default function MusicPlayer() {
     window.addEventListener('keydown', handleGlobalInteraction, { once: true });
 
     return () => {
+      clearTimeout(delayTimer);
       window.removeEventListener('click', handleGlobalInteraction);
       window.removeEventListener('touchstart', handleGlobalInteraction);
       window.removeEventListener('keydown', handleGlobalInteraction);
