@@ -4,6 +4,11 @@ import './globals.scss';
 export const metadata: Metadata = {
   title: "Mithran's Birthday ❤️",
   description: "A special birthday celebration created with love by Muthukumar & Pavithra for their son Mithran.",
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
   openGraph: {
     title: "Mithran's Birthday Celebration",
     description: "A name created with the love of Muthukumar & Pavithra. Celebrating our little miracle Mithran ❤️",
