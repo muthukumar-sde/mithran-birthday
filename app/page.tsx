@@ -5,7 +5,6 @@ import PhotoGallery from './components/PhotoGallery';
 import NameStory from './components/NameStory';
 import BirthdayMessage from './components/BirthdayMessage';
 import BirthdayCelebration from './components/BirthdayCelebration';
-import Footer from './components/Footer';
 import CustomCursor from './components/CustomCursor';
 import ScrollProgress from './components/ScrollProgress';
 import BackgroundCrackers from './components/BackgroundCrackers';
@@ -26,7 +25,6 @@ export default function Home() {
       <NameStory />
       <BirthdayMessage />
       <BirthdayCelebration />
-      <Footer />
     </main>
   );
 }

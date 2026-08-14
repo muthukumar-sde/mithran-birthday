@@ -100,7 +100,6 @@ mithran-birthday/
 │   │   ├── Confetti.tsx
 │   │   ├── CustomCursor.tsx
 │   │   ├── Fireworks.tsx
-│   │   ├── Footer.tsx
 │   │   ├── Hero.tsx
 │   │   ├── ImageProtection.tsx
 │   │   ├── MusicPlayer.tsx
