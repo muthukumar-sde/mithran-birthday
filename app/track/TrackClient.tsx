@@ -107,17 +107,45 @@ export default function TrackClient() {
 
   const fetchLogs = async () => {
     setLoading(true);
+    let fetchedVisits: VisitLog[] = [];
     try {
       const res = await fetch('/api/track');
       if (res.ok) {
         const data = await res.json();
-        setLogs(data.visits || []);
+        if (Array.isArray(data.visits) && data.visits.length > 0) {
+          fetchedVisits = data.visits;
+        }
       }
     } catch (err) {
-      console.error('Failed to fetch visit logs:', err);
-    } finally {
-      setLoading(false);
+      console.error('API track fetch error:', err);
     }
+
+    if (fetchedVisits.length === 0) {
+      try {
+        const pubRes1 = await fetch('/data/visits.json');
+        if (pubRes1.ok) {
+          const data1 = await pubRes1.json();
+          if (Array.isArray(data1) && data1.length > 0) {
+            fetchedVisits = data1;
+          }
+        }
+      } catch {}
+    }
+
+    if (fetchedVisits.length === 0) {
+      try {
+        const pubRes2 = await fetch('/visits.json');
+        if (pubRes2.ok) {
+          const data2 = await pubRes2.json();
+          if (Array.isArray(data2) && data2.length > 0) {
+            fetchedVisits = data2;
+          }
+        }
+      } catch {}
+    }
+
+    setLogs(fetchedVisits);
+    setLoading(false);
   };
 
   useEffect(() => {

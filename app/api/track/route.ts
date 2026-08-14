@@ -27,42 +27,58 @@ export interface VisitLogItem {
 // In-memory store for fast serverless serving
 let memoryVisits: VisitLogItem[] = [];
 
-function getLogFilePath(): string {
+function getTargetLogFilePaths(): string[] {
+  const paths: string[] = [];
+  try {
+    const publicDataDir = path.join(process.cwd(), 'public', 'data');
+    if (!fs.existsSync(publicDataDir)) {
+      fs.mkdirSync(publicDataDir, { recursive: true });
+    }
+    paths.push(path.join(publicDataDir, 'visits.json'));
+  } catch {}
+
+  try {
+    const publicDir = path.join(process.cwd(), 'public');
+    paths.push(path.join(publicDir, 'visits.json'));
+  } catch {}
+
   try {
     const localDir = path.join(process.cwd(), 'data');
     if (!fs.existsSync(localDir)) {
       fs.mkdirSync(localDir, { recursive: true });
     }
-    return path.join(localDir, 'visits.json');
-  } catch {
-    return path.join(os.tmpdir(), 'mithran_visits.json');
-  }
+    paths.push(path.join(localDir, 'visits.json'));
+  } catch {}
+
+  paths.push(path.join(os.tmpdir(), 'mithran_visits.json'));
+  return paths;
 }
 
 function readLogVisits(): VisitLogItem[] {
-  try {
-    const filePath = getLogFilePath();
-    if (fs.existsSync(filePath)) {
-      const data = fs.readFileSync(filePath, 'utf-8');
-      const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) {
-        memoryVisits = parsed;
-        return parsed;
+  const filePaths = getTargetLogFilePaths();
+  for (const filePath of filePaths) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const data = fs.readFileSync(filePath, 'utf-8');
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          memoryVisits = parsed;
+          return parsed;
+        }
       }
-    }
-  } catch (err) {
-    console.error('Error reading visits log file:', err);
+    } catch {}
   }
   return memoryVisits;
 }
 
 function saveLogVisits(visits: VisitLogItem[]) {
   memoryVisits = visits;
-  try {
-    const filePath = getLogFilePath();
-    fs.writeFileSync(filePath, JSON.stringify(visits.slice(0, 1000), null, 2), 'utf-8');
-  } catch (err) {
-    console.error('Error writing visits log file:', err);
+  const jsonString = JSON.stringify(visits.slice(0, 1000), null, 2);
+  const filePaths = getTargetLogFilePaths();
+  for (const filePath of filePaths) {
+    try {
+      fs.writeFileSync(filePath, jsonString, 'utf-8');
+    } catch {}
   }
 }
 
