@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -25,7 +24,7 @@ export interface VisitLogItem {
   path: string;
 }
 
-// Memory fallback store
+// In-memory store for fast serverless serving
 let memoryVisits: VisitLogItem[] = [];
 
 function getLogFilePath(): string {
@@ -40,30 +39,30 @@ function getLogFilePath(): string {
   }
 }
 
-function readFallbackVisits(): VisitLogItem[] {
+function readLogVisits(): VisitLogItem[] {
   try {
     const filePath = getLogFilePath();
     if (fs.existsSync(filePath)) {
       const data = fs.readFileSync(filePath, 'utf-8');
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         memoryVisits = parsed;
         return parsed;
       }
     }
   } catch (err) {
-    console.error('Error reading fallback visits:', err);
+    console.error('Error reading visits log file:', err);
   }
   return memoryVisits;
 }
 
-function saveFallbackVisits(visits: VisitLogItem[]) {
+function saveLogVisits(visits: VisitLogItem[]) {
   memoryVisits = visits;
   try {
     const filePath = getLogFilePath();
     fs.writeFileSync(filePath, JSON.stringify(visits.slice(0, 1000), null, 2), 'utf-8');
   } catch (err) {
-    console.error('Error writing fallback visits:', err);
+    console.error('Error writing visits log file:', err);
   }
 }
 
@@ -91,57 +90,17 @@ function parseUserAgent(ua: string) {
   return { device, browser, osName };
 }
 
-// GET: Return all visitor logs (from Prisma DB if connected, else fallback)
+// GET: Return all stored visitor logs for /track table
 export async function GET() {
-  if (prisma) {
-    try {
-      const dbVisits = await prisma.visitLog.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 500,
-      });
-
-      const visits: VisitLogItem[] = dbVisits.map((item) => ({
-        id: item.id,
-        timestamp: item.timestamp,
-        ip: item.ip,
-        city: item.city,
-        region: item.region,
-        country: item.country,
-        countryCode: item.countryCode,
-        org: item.org,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        userAgent: item.userAgent,
-        device: item.device,
-        browser: item.browser,
-        osName: item.osName,
-        screen: item.screen,
-        language: item.language,
-        referrer: item.referrer,
-        path: item.path,
-      }));
-
-      return NextResponse.json({
-        success: true,
-        source: 'prisma',
-        total: visits.length,
-        visits,
-      });
-    } catch {
-      // Prisma query failed, fall through to fallback store cleanly
-    }
-  }
-
-  const fallback = readFallbackVisits();
+  const visits = readLogVisits();
   return NextResponse.json({
     success: true,
-    source: 'fallback',
-    total: fallback.length,
-    visits: fallback,
+    total: visits.length,
+    visits,
   });
 }
 
-// POST: Record a new visitor
+// POST: Record a new visitor in log file
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -152,7 +111,7 @@ export async function POST(req: NextRequest) {
       req.headers.get('x-real-ip') ||
       req.headers.get('x-vercel-forwarded-for') ||
       '';
-    
+
     let rawIp = forwardedFor.split(',')[0].trim();
     if (!rawIp || rawIp === '127.0.0.1' || rawIp === '::1') {
       rawIp = body.clientIp || rawIp || '127.0.0.1';
@@ -160,7 +119,7 @@ export async function POST(req: NextRequest) {
 
     const ip = rawIp.replace(/^::ffff:/, '');
 
-    // Vercel Geolocation headers (automatically populated on Vercel)
+    // Vercel Geolocation headers
     let city = body.city || (req.headers.get('x-vercel-ip-city') ? decodeURIComponent(req.headers.get('x-vercel-ip-city')!) : '');
     let country = body.country || req.headers.get('x-vercel-ip-country') || '';
     let region = body.region || (req.headers.get('x-vercel-ip-country-region') ? decodeURIComponent(req.headers.get('x-vercel-ip-country-region')!) : '');
@@ -171,7 +130,7 @@ export async function POST(req: NextRequest) {
 
     const isLocalIp = ip === '127.0.0.1' || ip === '::1' || ip.startsWith('192.168.') || ip.startsWith('10.');
 
-    // If city/country not captured yet and public IP, fetch real location via ip-api
+    // If city not set and public IP, query ip-api
     if ((!city || city === 'Unknown City') && !isLocalIp) {
       try {
         const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,org,lat,lon`, {
@@ -226,44 +185,12 @@ export async function POST(req: NextRequest) {
       path: body.path || '/',
     };
 
-    // Save to Prisma DB if available
-    let dbSuccess = false;
-    if (prisma) {
-      try {
-        await prisma.visitLog.create({
-          data: {
-            timestamp: logData.timestamp,
-            ip: logData.ip,
-            city: logData.city,
-            region: logData.region,
-            country: logData.country,
-            countryCode: logData.countryCode,
-            org: logData.org,
-            latitude: logData.latitude,
-            longitude: logData.longitude,
-            userAgent: logData.userAgent,
-            device: logData.device,
-            browser: logData.browser,
-            osName: logData.osName,
-            screen: logData.screen,
-            language: logData.language,
-            referrer: logData.referrer,
-            path: logData.path,
-          },
-        });
-        dbSuccess = true;
-      } catch (dbErr) {
-        console.warn('Prisma save failed, using fallback storage:', dbErr);
-      }
-    }
-
-    // Always update fallback memory/file store as safety net
-    const currentFallback = readFallbackVisits();
-    saveFallbackVisits([logData, ...currentFallback]);
+    const currentVisits = readLogVisits();
+    const updatedVisits = [logData, ...currentVisits];
+    saveLogVisits(updatedVisits);
 
     return NextResponse.json({
       success: true,
-      dbSaved: dbSuccess,
       log: logData,
     });
   } catch (err) {
@@ -272,15 +199,8 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE: Clear all logs
+// DELETE: Clear all stored logs
 export async function DELETE() {
-  if (prisma) {
-    try {
-      await prisma.visitLog.deleteMany({});
-    } catch {
-      // Ignore if Prisma DB not initialized
-    }
-  }
-  saveFallbackVisits([]);
-  return NextResponse.json({ success: true, message: 'All logs cleared' });
+  saveLogVisits([]);
+  return NextResponse.json({ success: true, message: 'All visitor logs cleared' });
 }
