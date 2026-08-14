@@ -394,7 +394,6 @@ User Agent: ${log.userAgent}`;
                 <th>IP Address</th>
                 <th>Screen</th>
                 <th>Path</th>
-                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -453,18 +452,6 @@ User Agent: ${log.userAgent}`;
                     <td className={styles.screenCol}>{log.screen}</td>
                     <td className={styles.pathCol}>
                       <span className={styles.pathTag}>{log.path ? log.path.replace(/\s*\(Explored Website\)/g, '') : '/'}</span>
-                    </td>
-                    <td className={styles.actionCol}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedLog(log);
-                        }}
-                        className={styles.viewDetailBtn}
-                      >
-                        <Info size={14} />
-                        <span>Details</span>
-                      </button>
                     </td>
                   </tr>
                 );

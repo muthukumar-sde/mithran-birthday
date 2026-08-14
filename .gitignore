@@ -28,3 +28,9 @@ next-env.d.ts
 # OS files
 .DS_Store
 Thumbs.db
+
+# Project rules files
+PROJECT_RULES.md
+AGY_RULES.md
+.gemini/
+

@@ -131,53 +131,54 @@ export default function PhotoGallery() {
               <X size={28} />
             </button>
 
-            <button
-              className={styles.prevBtn}
-              onClick={(e) => {
-                e.stopPropagation();
-                prevPhoto();
-              }}
-              aria-label="Previous"
-            >
-              <ChevronLeft size={36} />
-            </button>
+            <div className={styles.lightboxBody} onClick={(e) => e.stopPropagation()}>
+              <button
+                className={styles.prevBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevPhoto();
+                }}
+                aria-label="Previous"
+              >
+                <ChevronLeft size={36} />
+              </button>
 
-            <motion.div
-              key={selectedPhotoIndex}
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.85, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25 }}
-              className={styles.lightboxContent}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={styles.lightboxImgContainer}>
-                <Image
-                  src={photos[selectedPhotoIndex].src}
-                  alt={photos[selectedPhotoIndex].alt}
-                  fill
-                  sizes="100vw"
-                  className={styles.lightboxImg}
-                />
-              </div>
-              <div className={styles.lightboxFooter}>
-                <p>{photos[selectedPhotoIndex].caption}</p>
-                <span>
-                  {selectedPhotoIndex + 1} / {photos.length}
-                </span>
-              </div>
-            </motion.div>
+              <motion.div
+                key={selectedPhotoIndex}
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.85, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25 }}
+                className={styles.lightboxContent}
+              >
+                <div className={styles.lightboxImgContainer}>
+                  <Image
+                    src={photos[selectedPhotoIndex].src}
+                    alt={photos[selectedPhotoIndex].alt}
+                    fill
+                    sizes="100vw"
+                    className={styles.lightboxImg}
+                  />
+                </div>
+                <div className={styles.lightboxFooter}>
+                  <p>{photos[selectedPhotoIndex].caption}</p>
+                  <span>
+                    {selectedPhotoIndex + 1} / {photos.length}
+                  </span>
+                </div>
+              </motion.div>
 
-            <button
-              className={styles.nextBtn}
-              onClick={(e) => {
-                e.stopPropagation();
-                nextPhoto();
-              }}
-              aria-label="Next"
-            >
-              <ChevronRight size={36} />
-            </button>
+              <button
+                className={styles.nextBtn}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextPhoto();
+                }}
+                aria-label="Next"
+              >
+                <ChevronRight size={36} />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
