@@ -70,6 +70,7 @@ export default function VisitorTracker() {
       try {
         await fetch('/api/track', {
           method: 'POST',
+          cache: 'no-store',
           headers: {
             'Content-Type': 'application/json',
           },

@@ -46,6 +46,7 @@ export interface VisitLog {
   language: string;
   referrer: string;
   path: string;
+  action?: string;
 }
 
 function getCountryFlag(code: string) {
@@ -99,21 +100,25 @@ export default function TrackClient() {
   const [logs, setLogs] = useState<VisitLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [dataSource, setDataSource] = useState<string>('');
   const [selectedLog, setSelectedLog] = useState<VisitLog | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const fetchLogs = async () => {
-    setLoading(true);
+  const fetchLogs = async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
     let fetchedVisits: VisitLog[] = [];
     try {
-      const res = await fetch('/api/track');
+      const res = await fetch('/api/track', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data.visits) && data.visits.length > 0) {
+        if (Array.isArray(data.visits)) {
           fetchedVisits = data.visits;
+        }
+        if (data.source) {
+          setDataSource(data.source);
         }
       }
     } catch (err) {
@@ -122,7 +127,7 @@ export default function TrackClient() {
 
     if (fetchedVisits.length === 0) {
       try {
-        const pubRes1 = await fetch('/data/visits.json');
+        const pubRes1 = await fetch('/data/visits.json', { cache: 'no-store' });
         if (pubRes1.ok) {
           const data1 = await pubRes1.json();
           if (Array.isArray(data1) && data1.length > 0) {
@@ -134,7 +139,7 @@ export default function TrackClient() {
 
     if (fetchedVisits.length === 0) {
       try {
-        const pubRes2 = await fetch('/visits.json');
+        const pubRes2 = await fetch('/visits.json', { cache: 'no-store' });
         if (pubRes2.ok) {
           const data2 = await pubRes2.json();
           if (Array.isArray(data2) && data2.length > 0) {
@@ -152,12 +157,12 @@ export default function TrackClient() {
     fetchLogs();
   }, []);
 
-  // Live Auto-Refresh (Poll every 10 seconds if enabled)
+  // Live Auto-Refresh (Poll every 3 seconds silently if enabled)
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
-      fetchLogs();
-    }, 10000);
+      fetchLogs(true);
+    }, 3000);
     return () => clearInterval(interval);
   }, [autoRefresh]);
 
@@ -451,6 +456,7 @@ User Agent: ${log.userAgent}`;
                     <td className={styles.screenCol}>{log.screen}</td>
                     <td className={styles.pathCol}>
                       <span className={styles.pathTag}>{log.path}</span>
+                      {log.action && <span className={styles.actionBadge}>{log.action}</span>}
                     </td>
                     <td className={styles.actionCol}>
                       <button
@@ -681,6 +687,12 @@ User Agent: ${log.userAgent}`;
                       <span className={styles.fieldLabel}>Visited Path</span>
                       <span className={styles.fieldValueHighlight}>{selectedLog.path}</span>
                     </div>
+                    {selectedLog.action && (
+                      <div className={styles.fieldRow}>
+                        <span className={styles.fieldLabel}>User Action</span>
+                        <span className={styles.actionBadge}>{selectedLog.action}</span>
+                      </div>
+                    )}
                     <div className={styles.fieldRow}>
                       <span className={styles.fieldLabel}>Referrer</span>
                       <span className={styles.fieldValue}>{selectedLog.referrer}</span>

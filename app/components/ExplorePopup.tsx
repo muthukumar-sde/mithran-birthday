@@ -27,9 +27,72 @@ export default function ExplorePopup({ onExplore }: ExplorePopupProps) {
     };
   }, [isOpen]);
 
-  const handleExplore = () => {
+  const handleExplore = async () => {
     setIsOpen(false);
     triggerConfetti();
+
+    // Track Click to Explore event to visitor log file
+    try {
+      let clientGeoData: Record<string, unknown> = {};
+
+      try {
+        const geoRes = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(3000) });
+        if (geoRes.ok) {
+          const data = await geoRes.json();
+          if (data && data.city) {
+            clientGeoData = {
+              clientIp: data.ip,
+              city: data.city,
+              region: data.region,
+              country: data.country_name,
+              countryCode: data.country_code,
+              org: data.org || data.asn,
+              latitude: data.latitude,
+              longitude: data.longitude,
+            };
+          }
+        }
+      } catch {}
+
+      if (!clientGeoData.city) {
+        try {
+          const geoRes2 = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) });
+          if (geoRes2.ok) {
+            const data2 = await geoRes2.json();
+            if (data2 && data2.success && data2.city) {
+              clientGeoData = {
+                clientIp: data2.ip,
+                city: data2.city,
+                region: data2.region,
+                country: data2.country,
+                countryCode: data2.country_code,
+                org: data2.connection?.isp || data2.connection?.org || '',
+                latitude: data2.latitude,
+                longitude: data2.longitude,
+              };
+            }
+          }
+        } catch {}
+      }
+
+      await fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...clientGeoData,
+          action: 'Click to Explore',
+          path: '/ (Explored Website)',
+          userAgent: navigator.userAgent,
+          screen: `${window.screen.width}x${window.screen.height}`,
+          language: navigator.language,
+          referrer: document.referrer || 'Direct',
+          timestamp: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.error('Explore tracking error:', err);
+    }
+
     if (onExplore) {
       onExplore();
     }

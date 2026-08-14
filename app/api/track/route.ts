@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { getSql } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export interface VisitLogItem {
   id: string;
@@ -22,10 +26,45 @@ export interface VisitLogItem {
   language: string;
   referrer: string;
   path: string;
+  action?: string;
 }
 
-// In-memory store for fast serverless serving
+// In-memory fallback store
 let memoryVisits: VisitLogItem[] = [];
+
+let isTableInitialized = false;
+
+async function ensureTableExists(sql: any) {
+  if (isTableInitialized) return;
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS visit_logs (
+        id TEXT PRIMARY KEY,
+        timestamp TEXT NOT NULL,
+        ip TEXT,
+        city TEXT,
+        region TEXT,
+        country TEXT,
+        country_code TEXT,
+        org TEXT,
+        latitude DOUBLE PRECISION,
+        longitude DOUBLE PRECISION,
+        user_agent TEXT,
+        device TEXT,
+        browser TEXT,
+        os_name TEXT,
+        screen TEXT,
+        language TEXT,
+        referrer TEXT,
+        path TEXT,
+        action TEXT
+      );
+    `;
+    isTableInitialized = true;
+  } catch (err) {
+    console.error('Failed to create visit_logs table:', err);
+  }
+}
 
 function getTargetLogFilePaths(): string[] {
   const paths: string[] = [];
@@ -108,15 +147,72 @@ function parseUserAgent(ua: string) {
 
 // GET: Return all stored visitor logs for /track table
 export async function GET() {
+  const sql = getSql();
+  if (sql) {
+    try {
+      await ensureTableExists(sql);
+      const rows = await sql`
+        SELECT 
+          id,
+          timestamp,
+          ip,
+          city,
+          region,
+          country,
+          country_code AS "countryCode",
+          org,
+          latitude,
+          longitude,
+          user_agent AS "userAgent",
+          device,
+          browser,
+          os_name AS "osName",
+          screen,
+          language,
+          referrer,
+          path,
+          action
+        FROM visit_logs 
+        ORDER BY timestamp DESC 
+        LIMIT 1000
+      `;
+
+      return NextResponse.json(
+        {
+          success: true,
+          total: rows.length,
+          visits: rows as VisitLogItem[],
+          source: 'neon',
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, max-age=0, must-revalidate',
+          },
+        }
+      );
+    } catch (err) {
+      console.error('Neon DB GET error:', err);
+    }
+  }
+
+  // Fallback to local logs
   const visits = readLogVisits();
-  return NextResponse.json({
-    success: true,
-    total: visits.length,
-    visits,
-  });
+  return NextResponse.json(
+    {
+      success: true,
+      total: visits.length,
+      visits,
+      source: 'local',
+    },
+    {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0, must-revalidate',
+      },
+    }
+  );
 }
 
-// POST: Record a new visitor in log file
+// POST: Record a new visitor
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -199,8 +295,49 @@ export async function POST(req: NextRequest) {
       language: body.language || req.headers.get('accept-language')?.split(',')[0] || 'Unknown',
       referrer: body.referrer || 'Direct',
       path: body.path || '/',
+      action: body.action || 'Site Visit',
     };
 
+    const sql = getSql();
+    let savedToDb = false;
+
+    if (sql) {
+      try {
+        await ensureTableExists(sql);
+        await sql`
+          INSERT INTO visit_logs (
+            id, timestamp, ip, city, region, country, country_code, org,
+            latitude, longitude, user_agent, device, browser, os_name,
+            screen, language, referrer, path, action
+          ) VALUES (
+            ${logData.id},
+            ${logData.timestamp},
+            ${logData.ip},
+            ${logData.city},
+            ${logData.region},
+            ${logData.country},
+            ${logData.countryCode},
+            ${logData.org},
+            ${logData.latitude},
+            ${logData.longitude},
+            ${logData.userAgent},
+            ${logData.device},
+            ${logData.browser},
+            ${logData.osName},
+            ${logData.screen},
+            ${logData.language},
+            ${logData.referrer},
+            ${logData.path},
+            ${logData.action}
+          )
+        `;
+        savedToDb = true;
+      } catch (err) {
+        console.error('Neon DB POST error:', err);
+      }
+    }
+
+    // Always keep memory & file in sync as backup
     const freshVisits = readLogVisits();
     const updatedVisits = [logData, ...freshVisits];
     saveLogVisits(updatedVisits);
@@ -208,6 +345,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       log: logData,
+      source: savedToDb ? 'neon' : 'local',
     });
   } catch (err) {
     console.error('Track API error:', err);
@@ -217,6 +355,16 @@ export async function POST(req: NextRequest) {
 
 // DELETE: Clear all stored logs
 export async function DELETE() {
+  const sql = getSql();
+  if (sql) {
+    try {
+      await ensureTableExists(sql);
+      await sql`TRUNCATE TABLE visit_logs`;
+    } catch (err) {
+      console.error('Neon DB DELETE error:', err);
+    }
+  }
+
   saveLogVisits([]);
   return NextResponse.json({ success: true, message: 'All visitor logs cleared' });
 }
