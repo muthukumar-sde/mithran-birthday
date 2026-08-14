@@ -129,7 +129,7 @@ export default function ExplorePopup({ onExplore }: ExplorePopupProps) {
             <div className={styles.portraitWrap}>
               <div className={styles.portraitRing}>
                 <Image
-                  src="/images/photo-25.jpeg"
+                  src="/images/photo-25.jpg"
                   alt="Little Mithran"
                   fill
                   priority

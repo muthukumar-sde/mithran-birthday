@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: '/images/photo-25.jpeg',
+        url: '/images/photo-25.jpg',
         width: 1200,
         height: 630,
         alt: "Mithran's Birthday Celebration",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Mithran's 2nd Birthday Celebration ❤️✨",
     description: "Celebrating 2 years of pure magic, laughter, and endless love created by Muthukumar & Pavithra.",
-    images: ['/images/photo-25.jpeg'],
+    images: ['/images/photo-25.jpg'],
   },
 };
 

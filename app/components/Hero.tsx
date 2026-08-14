@@ -151,7 +151,7 @@ export default function Hero() {
           <div className={styles.glowingRing} />
           <div className={styles.imageContainer}>
             <Image
-              src="/images/photo-25.jpeg"
+              src="/images/photo-25.jpg"
               alt="Mithran"
               fill
               priority
