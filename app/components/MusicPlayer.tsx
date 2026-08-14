@@ -16,26 +16,31 @@ export default function MusicPlayer() {
     audio.preload = 'auto';
     audioRef.current = audio;
 
-    // Attempt silent autoplay
+    // Attempt autoplay on load
     const tryAutoplay = async () => {
       try {
         await audio.play();
         setIsPlaying(true);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
       } catch {
-        // Autoplay blocked by browser policy
+        // Autoplay blocked by browser policy until user interaction
         setIsPlaying(false);
+        setShowToast(true);
       }
     };
 
     tryAutoplay();
 
-    // Unlock audio silently on first user interaction anywhere on the page
+    // Start playing sound on first user gesture anywhere on the page
     const handleGlobalInteraction = () => {
       if (audioRef.current && audioRef.current.paused) {
         audioRef.current
           .play()
           .then(() => {
             setIsPlaying(true);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
           })
           .catch(() => {});
       }
@@ -43,12 +48,12 @@ export default function MusicPlayer() {
 
     window.addEventListener('click', handleGlobalInteraction, { once: true });
     window.addEventListener('touchstart', handleGlobalInteraction, { once: true });
-    window.addEventListener('scroll', handleGlobalInteraction, { once: true });
+    window.addEventListener('keydown', handleGlobalInteraction, { once: true });
 
     return () => {
       window.removeEventListener('click', handleGlobalInteraction);
       window.removeEventListener('touchstart', handleGlobalInteraction);
-      window.removeEventListener('scroll', handleGlobalInteraction);
+      window.removeEventListener('keydown', handleGlobalInteraction);
       audio.pause();
       audioRef.current = null;
     };
@@ -77,7 +82,7 @@ export default function MusicPlayer() {
             exit={{ opacity: 0, x: 20 }}
             className={styles.statusToast}
           >
-            {isPlaying ? 'Playing our special song...' : 'Music Paused'}
+            {isPlaying ? 'Playing our special song 🎵' : 'Tap anywhere for music 🎵'}
           </motion.div>
         )}
       </AnimatePresence>
