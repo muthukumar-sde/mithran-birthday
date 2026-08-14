@@ -778,14 +778,26 @@
   border: 1px solid rgba(245, 158, 11, 0.35);
   border-radius: 24px;
   padding: 28px;
-  max-width: 640px;
-  width: 100%;
+  max-width: 720px;
+  width: 95%;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(245, 158, 11, 0.4);
+    border-radius: 4px;
+  }
 
   @media (max-width: 640px) {
     padding: 20px 16px;
@@ -826,6 +838,7 @@
   code {
     color: #fde047;
     font-family: monospace;
+    word-break: break-all;
   }
 }
 
@@ -841,6 +854,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 
   &:hover {
     background: rgba(255, 255, 255, 0.2);
@@ -899,7 +913,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 
-  @media (max-width: 580px) {
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
 }
@@ -912,6 +926,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .detailSectionFull {
@@ -923,6 +938,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .sectionHeading {
@@ -943,14 +959,16 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
 }
 
 .fieldRow {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   font-size: 0.82rem;
-  gap: 10px;
+  gap: 12px;
+  min-width: 0;
 }
 
 .fieldRowStacked {
@@ -959,19 +977,24 @@
   gap: 6px;
   font-size: 0.82rem;
   margin-top: 4px;
+  min-width: 0;
 }
 
 .fieldLabel {
   color: #94a3b8;
   font-weight: 500;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .fieldValue {
   color: #f1f5f9;
   font-weight: 600;
   text-align: right;
-  word-break: break-word;
+  word-break: normal;
+  overflow-wrap: break-word;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .fieldValueCode {
@@ -981,11 +1004,17 @@
   padding: 2px 8px;
   border-radius: 6px;
   border: 1px solid rgba(245, 158, 11, 0.2);
+  word-break: break-all;
+  text-align: right;
+  max-width: 100%;
+  font-size: 0.78rem;
+  display: inline-block;
 }
 
 .fieldValueHighlight {
   color: #38bdf8;
   font-weight: 700;
+  word-break: break-all;
 }
 
 .uaBox {

@@ -107,8 +107,9 @@ export default function TrackClient() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const fetchLogs = async (isSilent = false) => {
-    if (!isSilent) setLoading(true);
+  const fetchLogs = async (isSilent: boolean | unknown = false) => {
+    const silentMode = typeof isSilent === 'boolean' ? isSilent : false;
+    if (!silentMode) setLoading(true);
     let fetchedVisits: VisitLog[] = [];
     try {
       const res = await fetch('/api/track', { cache: 'no-store' });
@@ -291,7 +292,7 @@ User Agent: ${log.userAgent}`;
             <RefreshCw size={14} className={autoRefresh ? styles.spinning : ''} />
             <span>{autoRefresh ? 'Live Auto: ON' : 'Live Auto: OFF'}</span>
           </button>
-          <button onClick={fetchLogs} className={styles.refreshBtn} disabled={loading}>
+          <button onClick={() => fetchLogs()} className={styles.refreshBtn} disabled={loading}>
             <RefreshCw size={16} className={loading ? styles.spinning : ''} />
             <span>Refresh</span>
           </button>
@@ -455,8 +456,7 @@ User Agent: ${log.userAgent}`;
                     </td>
                     <td className={styles.screenCol}>{log.screen}</td>
                     <td className={styles.pathCol}>
-                      <span className={styles.pathTag}>{log.path}</span>
-                      {log.action && <span className={styles.actionBadge}>{log.action}</span>}
+                      <span className={styles.pathTag}>{log.path ? log.path.replace(/\s*\(Explored Website\)/g, '') : '/'}</span>
                     </td>
                     <td className={styles.actionCol}>
                       <button

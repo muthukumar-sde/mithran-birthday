@@ -81,7 +81,7 @@ export default function ExplorePopup({ onExplore }: ExplorePopupProps) {
         body: JSON.stringify({
           ...clientGeoData,
           action: 'Click to Explore',
-          path: '/ (Explored Website)',
+          path: '/',
           userAgent: navigator.userAgent,
           screen: `${window.screen.width}x${window.screen.height}`,
           language: navigator.language,
