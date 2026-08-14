@@ -93,53 +93,52 @@ function parseUserAgent(ua: string) {
 
 // GET: Return all visitor logs (from Prisma DB if connected, else fallback)
 export async function GET() {
-  try {
-    if (!prisma) {
-      throw new Error('Prisma client not available');
+  if (prisma) {
+    try {
+      const dbVisits = await prisma.visitLog.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+      });
+
+      const visits: VisitLogItem[] = dbVisits.map((item) => ({
+        id: item.id,
+        timestamp: item.timestamp,
+        ip: item.ip,
+        city: item.city,
+        region: item.region,
+        country: item.country,
+        countryCode: item.countryCode,
+        org: item.org,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        userAgent: item.userAgent,
+        device: item.device,
+        browser: item.browser,
+        osName: item.osName,
+        screen: item.screen,
+        language: item.language,
+        referrer: item.referrer,
+        path: item.path,
+      }));
+
+      return NextResponse.json({
+        success: true,
+        source: 'prisma',
+        total: visits.length,
+        visits,
+      });
+    } catch {
+      // Prisma query failed, fall through to fallback store cleanly
     }
-    // Try querying Prisma DB
-    const dbVisits = await prisma.visitLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 500,
-    });
-
-    const visits: VisitLogItem[] = dbVisits.map((item) => ({
-      id: item.id,
-      timestamp: item.timestamp,
-      ip: item.ip,
-      city: item.city,
-      region: item.region,
-      country: item.country,
-      countryCode: item.countryCode,
-      org: item.org,
-      latitude: item.latitude,
-      longitude: item.longitude,
-      userAgent: item.userAgent,
-      device: item.device,
-      browser: item.browser,
-      osName: item.osName,
-      screen: item.screen,
-      language: item.language,
-      referrer: item.referrer,
-      path: item.path,
-    }));
-
-    return NextResponse.json({
-      success: true,
-      source: 'prisma',
-      total: visits.length,
-      visits,
-    });
-  } catch (err) {
-    console.warn('Prisma DB query failed, falling back to memory/file store:', err);
-    const fallback = readFallbackVisits();
-    return NextResponse.json({
-      success: true,
-      source: 'fallback',
-      total: fallback.length,
-      visits: fallback,
-    });
   }
+
+  const fallback = readFallbackVisits();
+  return NextResponse.json({
+    success: true,
+    source: 'fallback',
+    total: fallback.length,
+    visits: fallback,
+  });
 }
 
 // POST: Record a new visitor
@@ -195,8 +194,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (isLocalIp && !city) {
-      city = 'Chennai (Dev)';
+    if (isLocalIp && (!city || city === 'Unknown City')) {
+      city = 'Chennai';
       country = 'India';
       countryCode = 'IN';
       region = 'Tamil Nadu';
