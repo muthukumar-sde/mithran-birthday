@@ -185,30 +185,30 @@ export default function Hero() {
             💖
           </motion.div>
         </motion.div>
-      </motion.div>
 
-      {/* Highlighted Scroll Down Indicator */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: [0, 8, 0] }}
-        transition={{
-          opacity: { delay: 2.8, duration: 0.8 },
-          y: { delay: 3, duration: 1.8, repeat: Infinity, ease: 'easeInOut' },
-        }}
-        whileHover={{ scale: 1.06 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => {
-          document.getElementById('timeline')?.scrollIntoView({ behavior: 'smooth' });
-        }}
-        className={styles.scrollDownHighlight}
-        aria-label="Scroll to explore timeline"
-      >
-        <span className={styles.scrollBadge}>
-          <Sparkles className={styles.scrollIconLeft} />
-          <span className={styles.scrollText}>Scroll to Explore</span>
-          <ChevronDown className={styles.scrollChevron} />
-        </span>
-      </motion.button>
+        {/* Highlighted Scroll Down Indicator */}
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: [0, 8, 0] }}
+          transition={{
+            opacity: { delay: 2.8, duration: 0.8 },
+            y: { delay: 3, duration: 1.8, repeat: Infinity, ease: 'easeInOut' },
+          }}
+          whileHover={{ scale: 1.06 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            document.getElementById('timeline')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          className={styles.scrollDownHighlight}
+          aria-label="Scroll to explore timeline"
+        >
+          <span className={styles.scrollBadge}>
+            <Sparkles className={styles.scrollIconLeft} />
+            <span className={styles.scrollText}>Scroll to Explore</span>
+            <ChevronDown className={styles.scrollChevron} />
+          </span>
+        </motion.button>
+      </motion.div>
     </section>
   );
 }
