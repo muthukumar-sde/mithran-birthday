@@ -58,7 +58,7 @@ export default function ExplorePopup({ onExplore }: ExplorePopupProps) {
             {/* Sparkle Badges */}
             <div className={styles.badgeWrap}>
               <Sparkles className={styles.sparkleIcon} />
-              <span>1st Birthday Special</span>
+              <span>2nd Birthday Special</span>
               <Sparkles className={styles.sparkleIcon} />
             </div>
 
@@ -84,7 +84,7 @@ export default function ExplorePopup({ onExplore }: ExplorePopupProps) {
             </h2>
 
             <p className={styles.subtitle}>
-              Celebrating 1 Year of pure magic, laughter, and endless love created by <strong>Muthukumar</strong> &amp; <strong>Pavithra</strong>.
+              Celebrating 2 Years of pure magic, laughter, and endless love created by <strong>Muthukumar</strong> &amp; <strong>Pavithra</strong>.
             </p>
 
             {/* Explore Button */}

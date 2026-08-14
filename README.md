@@ -1,6 +1,6 @@
-# Mithran's 1st Birthday Celebration ❤️✨
+# Mithran's 2nd Birthday Celebration ❤️✨
 
-A beautiful, interactive, and personalized web application created with love by **Muthukumar & Pavithra** to celebrate the 1st Birthday of their darling son, **Mithran**.
+A beautiful, interactive, and personalized web application created with love by **Muthukumar & Pavithra** to celebrate the 2nd Birthday of their darling son, **Mithran**.
 
 ---
 
@@ -12,7 +12,7 @@ A beautiful, interactive, and personalized web application created with love by 
   - Interactive glowing **Scroll to Explore** pill button with smooth scrolling.
 
 - ⏳ **Interactive Milestone Timeline**:
-  - Month-by-month journey from Month 2 coos up to the 1st Birthday celebration.
+  - Month-by-month journey from Month 2 coos up to the 2nd Birthday celebration.
   - Rich imagery, icons, and animated milestone cards.
 
 - 📸 **Precious Moments Photo Gallery**:
