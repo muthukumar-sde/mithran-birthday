@@ -405,6 +405,16 @@
 .cityText {
   color: #ffffff;
   font-weight: 600;
+
+  strong {
+    color: #fde047;
+  }
+}
+
+.countrySub {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 400;
 }
 
 .orgText {

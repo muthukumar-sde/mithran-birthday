@@ -315,8 +315,17 @@ export default function TrackClient() {
                         <span className={styles.flagEmoji}>{flag}</span>
                         <div>
                           <div className={styles.cityText}>
-                            {log.city !== 'Unknown City' ? log.city : ''}{' '}
-                            {log.country !== 'Unknown Country' ? log.country : 'Unknown Location'}
+                            {log.city !== 'Unknown City' ? (
+                              <>
+                                <strong>{log.city}</strong>
+                                {log.region && log.region !== 'Unknown Region' ? `, ${log.region}` : ''}
+                              </>
+                            ) : (
+                              'Unknown City'
+                            )}{' '}
+                            <span className={styles.countrySub}>
+                              {log.country !== 'Unknown Country' ? `(${log.country})` : ''}
+                            </span>
                           </div>
                           {log.org && log.org !== 'Unknown ISP' && <span className={styles.orgText}>{log.org}</span>}
                         </div>
@@ -366,8 +375,9 @@ export default function TrackClient() {
                     <div className={styles.logCardLoc}>
                       <span className={styles.flagEmoji}>{flag}</span>
                       <strong>
-                        {log.city !== 'Unknown City' ? `${log.city}, ` : ''}
-                        {log.country}
+                        {log.city !== 'Unknown City' ? log.city : ''}
+                        {log.region && log.region !== 'Unknown Region' ? `, ${log.region}` : ''}
+                        {log.country !== 'Unknown Country' ? ` (${log.country})` : ''}
                       </strong>
                     </div>
                   </div>
