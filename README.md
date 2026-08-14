@@ -99,6 +99,7 @@ mithran-birthday/
 │   │   ├── BirthdayMessage.tsx
 │   │   ├── Confetti.tsx
 │   │   ├── CustomCursor.tsx
+│   │   ├── ExplorePopup.tsx
 │   │   ├── Fireworks.tsx
 │   │   ├── Hero.tsx
 │   │   ├── ImageProtection.tsx

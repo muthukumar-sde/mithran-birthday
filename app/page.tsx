@@ -9,10 +9,12 @@ import CustomCursor from './components/CustomCursor';
 import ScrollProgress from './components/ScrollProgress';
 import BackgroundCrackers from './components/BackgroundCrackers';
 import ImageProtection from './components/ImageProtection';
+import ExplorePopup from './components/ExplorePopup';
 
 export default function Home() {
   return (
     <main className="main-wrapper">
+      <ExplorePopup />
       <ImageProtection />
       <CustomCursor />
       <ScrollProgress />
